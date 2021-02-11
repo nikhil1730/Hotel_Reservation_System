@@ -1,0 +1,155 @@
+
+package ADSProject;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+//import java.time.LocalDate;
+//import java.time.temporal.ChronoUnit;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.Scanner; 
+
+public class HelloWorld {
+	public static String fetchHotels(String location) {
+		String s = "select * from Hotel where Location like '%" + location + "' and RoomsAvailable is true";
+		return s;
+	}
+	public static String selectHotel(int hotelId) {
+		String fetchRooms = "select * from Room where Room.HotelId = " + String.valueOf(hotelId) + " and Status is true";
+//		System.out.println(fetchRooms);
+		return fetchRooms;
+	}
+//	public static void insertIntoCustomer(String name, String address, int phone, String email) {
+//		String customerDetails = "insert into Customer values ('" + name + "','" + address + "'," + String.valueOf(phone) + ",'" + email + "')";
+//		System.out.println(customerDetails);
+//	}
+//	public static String 	insertIntoBooking(String custName, String hotelName, int roomNumber, int cost, String location, int days) {
+//		String bookingQuery = "insert into Booking values ('" + custName + "','" + hotelName + "'," + String.valueOf(roomNumber) + "," + String.valueOf(cost) + ",'" + location  + "'," +String.valueOf(days) + ")";
+//		System.out.println(bookingQuery);
+//		return bookingQuery;
+//	}
+	
+	public static void validateDate(String date, int comparedays) throws ParseException {
+		String[] startEnd = date.replaceAll("\\s+","").split(",");
+		Date date1=new SimpleDateFormat("dd/MM/yyyy").parse(startEnd[0]);  
+		Date date2=new SimpleDateFormat("dd/MM/yyyy").parse(startEnd[1]); 
+		
+//		LocalDate dateBefore = LocalDate.parse(startEnd[0]);
+//		LocalDate dateAfter = LocalDate.parse(startEnd[1]);
+		
+		if(!date1.after(date2)) {
+			long difference = date2.getTime() - date1.getTime();
+		    int daysBetween = (int) (difference / (1000*60*60*24));
+		    if( daysBetween != comparedays) {
+		    	System.out.println("Number of days for stay entered doesn't match the start and end date");
+		    }
+
+		} else {
+			System.out.println("Please enter a valid start and end date");
+		}
+		
+		
+	}
+	
+	
+
+	public static void main(String[] args) throws SQLException{
+		HashMap<String, Integer> rooms = new HashMap<String, Integer>();
+		HashMap<Integer, Integer> roomCost = new HashMap<Integer, Integer>();
+		Scanner in = new Scanner(System.in);
+		String url = "jdbc:ucanaccess://D://Projects//EclipseJavaProjects//ADS_Project_DB.accdb";
+		Connection con = DriverManager.getConnection(url);
+		Statement s = con.createStatement();
+//		ResultSet rs = s.executeQuery("Select * from Employee where Name like '%N'");
+		System.out.println("Enter the location: ");
+        String location =	 in.nextLine();
+        System.out.println("Available Hotels at" + location + "are");
+		ResultSet rs = s.executeQuery(fetchHotels(location));
+
+		while(rs.next()) {
+			System.out.println(rs.getString(2));
+			rooms.put(rs.getString(2), rs.getInt(1));
+		}
+		
+		System.out.println("Select the Hotel in which you would like to check-In:");
+		String hotelName = in.nextLine();
+		System.out.println("Available rooms at " + hotelName + " are");
+		ResultSet rs1 = s.executeQuery(selectHotel(rooms.get(hotelName)));
+		while(rs1.next()) {
+			System.out.println("Room Number " + rs1.getString(2) + " with bedcount " + rs1.getInt(3) + " and cost per day is " + rs1.getString(4));
+			roomCost.put(rs1.getInt(2), rs1.getInt(4));
+		}
+		System.out.println("Select the room number to book the room:");
+		int roomNumber = Integer.parseInt(in.nextLine());
+		
+//		System.out.println("Enter the check-In date");
+//		System.out.println("Enter the checkout date");
+		
+		
+		System.out.println("For how many days you would like to book the room " + String.valueOf(roomNumber) + " for:");
+		int days = Integer.parseInt(in.nextLine());
+		int cost = roomCost.get(roomNumber)*days;
+		System.out.println("Total cost would be " + String.valueOf(cost));
+		System.out.println("Enter Yes/No to confirm the booking");
+		
+		String booking = in.nextLine();
+		if (booking.equalsIgnoreCase("Yes")) {
+			System.out.println("Please enter your details to book the room");
+			System.out.println("Enter your Name:");
+			String custName = in.nextLine();
+			System.out.println("Enter your Address:");
+			String custAddress = in.nextLine();
+			System.out.println("Enter your Phone Number:");
+			int custPhoneNo = Integer.parseInt(in.nextLine());
+			System.out.println("Enter your Email:");
+			String custEmail = in.nextLine();
+			System.out.println("Please enter the start date and end date in the form of (dd-MM-YYYY, dd-MM-YYYY)");
+			String startEndDate = in.nextLine();
+//			
+			try {
+				validateDate(startEndDate, days);
+			} catch (ParseException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+//			Inserting the new customer into Customer Table 
+			System.out.println("Inserting in Customer table");
+			String custQuery = " insert into customer (CustName, Address, PhoneNumber, Email)"
+	    	        + " values (?, ?, ?, ?)";
+	    	      PreparedStatement preparedStmt1 = con.prepareStatement(custQuery);
+	    	      preparedStmt1.setString (1, custName);
+	    	      preparedStmt1.setString (2, custAddress);
+	    	      preparedStmt1.setInt    (3, custPhoneNo);
+	    	      preparedStmt1.setString    (4, custEmail);
+	    	      preparedStmt1.execute();
+//			Inserting the booking details into Booking table
+			System.out.println("Inserting in Booking table");
+			String query = " insert into booking (CustName, HotelName, RoomNo, Cost, Location, Days)"
+	    	        + " values (?, ?, ?, ?, ?, ?)";
+	    	      PreparedStatement preparedStmt = con.prepareStatement(query);
+	    	      preparedStmt.setString (1, custName);
+	    	      preparedStmt.setString (2, hotelName);
+	    	      preparedStmt.setInt    (3, roomNumber);
+	    	      preparedStmt.setInt    (4, cost);
+	    	      preparedStmt.setString (5, location);
+	    	      preparedStmt.setInt    (6, days);
+	    	      preparedStmt.execute();			
+			System.out.println("Booking confirmed");
+		} else {
+			System.out.println("Exit");
+		}
+	    
+//		ResultSet sr = s.executeQuery("Select * from booking");
+//		while(sr.next()) {
+//			System.out.println(sr.getString(1));
+//		}
+	}
+	
+
+}

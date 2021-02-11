@@ -1,0 +1,19 @@
+
+package ADSProject;
+import java.sql.*;
+
+public class HelloWorld {
+
+	public static void main(String[] args) throws SQLException{
+		String url = "jdbc:ucanaccess://D://Projects//EclipseJavaProjects//ADS_Project_DB.accdb";
+		Connection con = DriverManager.getConnection(url);
+		Statement s = con.createStatement();
+		ResultSet rs = s.executeQuery("Select * from Employee where Name like '%N'");
+		while(rs.next()) {
+			System.out.println(rs.getString(2));
+		}
+		
+		System.out.println("HelLo World");
+	}
+
+}

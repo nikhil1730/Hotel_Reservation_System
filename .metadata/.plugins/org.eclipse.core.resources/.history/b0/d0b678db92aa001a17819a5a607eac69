@@ -1,0 +1,91 @@
+
+package ADSProject;
+import java.sql.*;
+import java.util.*;
+
+public class HelloWorld {
+	public static String fetchHotels(String location) {
+		String s = "select * from Hotel where Location like '%" + location + "' and RoomsAvailable is true";
+		return s;
+	}
+	public static String selectHotel(int hotelId) {
+		String fetchRooms = "select * from Room where Room.HotelId = " + String.valueOf(hotelId) + " and Status is true";
+//		System.out.println(fetchRooms);
+		return fetchRooms;
+	}
+	public static void insertIntoCustomer(String name, String address, int phone, String email) {
+		String customerDetails = "insert into Customer values ('" + name + "','" + address + "'," + String.valueOf(phone) + ",'" + email + "')";
+		System.out.println(customerDetails);
+	}
+	public static void 	insertIntoBooking(String custName, String hotelName, int roomNumber, int cost, String location, int days) {
+		String bookingDetails = "insert into Booking values ('" + custName + "','" + hotelName + "'," + String.valueOf(roomNumber) + "," + String.valueOf(cost) + "," + location  + String.valueOf(days) + ")";
+		System.out.println(bookingDetails);
+	}
+
+	public static void main(String[] args) throws SQLException{
+		HashMap<String, Integer> rooms = new HashMap<String, Integer>();
+		HashMap<Integer, Integer> roomCost = new HashMap<Integer, Integer>();
+//		HashMap
+		Scanner in = new Scanner(System.in);
+		String url = "jdbc:ucanaccess://D://Projects//EclipseJavaProjects//ADS_Project_DB.accdb";
+		Connection con = DriverManager.getConnection(url);
+		Statement s = con.createStatement();
+//		ResultSet rs = s.executeQuery("Select * from Employee where Name like '%N'");
+		System.out.println("Enter the location: ");
+        String location =	 in.nextLine();
+        System.out.println("Available Hotels at" + location + "are");
+		ResultSet rs = s.executeQuery(fetchHotels(location));
+
+//		ResultSet rs = s.executeQuery(fetchHotels("HYD"));
+		while(rs.next()) {
+			System.out.println(rs.getString(2));
+			rooms.put(rs.getString(2), rs.getInt(1));
+		}
+		
+		System.out.println("Select the Hotel in which you would like to check-In:");
+		String hotelName = in.nextLine();
+		System.out.println("Available rooms at " + hotelName + " are");
+		ResultSet rs1 = s.executeQuery(selectHotel(rooms.get(hotelName)));
+		while(rs1.next()) {
+			System.out.println("Room Number " + rs1.getString(2) + " with bedcount " + rs1.getInt(3) + " and cost per day is " + rs1.getString(4));
+			roomCost.put(rs1.getInt(2), rs1.getInt(4));
+		}
+		System.out.println("Select the room number to book the room:");
+		int roomNumber = Integer.parseInt(in.nextLine());
+		
+//		System.out.println("Enter the check-In date");
+//		System.out.println("Enter the checkout date");
+		
+		
+		System.out.println("For how many days you would like to book the room " + String.valueOf(roomNumber) + " for:");
+		int days = Integer.parseInt(in.nextLine());
+		int cost = roomCost.get(roomNumber)*days;
+		System.out.println("Total cost would be " + String.valueOf(cost));
+		System.out.println("Enter Yes/No to confirm the booking");
+		
+		String booking = in.nextLine();
+		if (booking.equalsIgnoreCase("Yes")) {
+			System.out.println("Please enter your details to book the room");
+			System.out.println("Enter your Name:");
+			String custName = in.nextLine();
+			System.out.println("Enter your Address:");
+			String custAddress = in.nextLine();
+			System.out.println("Enter your Phone Number:");
+			int custPhoneNo = Integer.parseInt(in.nextLine());
+			System.out.println("Enter your Email:");
+			String custEmail = in.nextLine();
+			
+			System.out.println("Inserting in Customer table");
+			insertIntoCustomer(custName, custAddress, custPhoneNo, custEmail);
+			
+			System.out.println("Inserting in Booking table");
+			insertIntoBooking(custName, hotelName, roomNumber, cost, location, days);
+			
+			System.out.println("Booking confirmed");
+		} else {
+			System.out.println("Exit");
+		}
+	}
+	
+
+}

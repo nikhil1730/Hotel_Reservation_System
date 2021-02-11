@@ -1,0 +1,24 @@
+
+package ADSProject;
+import java.sql.*;
+
+public class HelloWorld {
+	public static String fetchHotels(String location) {
+		String s = "select * from Hotel where Location like '%" + location + "'";
+		return s;
+	}
+	public static void main(String[] args) throws SQLException{
+		String url = "jdbc:ucanaccess://D://Projects//EclipseJavaProjects//ADS_Project_DB.accdb";
+		Connection con = DriverManager.getConnection(url);
+		Statement s = con.createStatement();
+//		ResultSet rs = s.executeQuery("Select * from Employee where Name like '%N'");
+		ResultSet rs = s.executeQuery(fetchHotels("HYD"));
+		while(rs.next()) {
+			System.out.println(rs.getString(2));
+		}
+		System.out.println(fetchHotels("HYD"));
+		System.out.println("Hello World");
+	}
+	
+
+}
